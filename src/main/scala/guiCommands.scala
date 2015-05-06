@@ -108,25 +108,31 @@ class Priorities() {
 		upward	 = upward diff List(floor)
 		}
 	def pop(dir:String ) = dir match {
-	//Removes the first item from both the upward and downward queues 
-		case "down"  => { 
-					val tmp = downward.head
-					downward = downward.tail
-					this.clean(tmp)
-					tmp
-				}
-		case "up"    => { 
-					val tmp = upward.head
-					upward = upward.tail
-					this.clean(tmp)
-					tmp
-				}
-		}
+	//Removes the first item from both the upward and downward queues
+	//Returns -1 if there are no more items in the given direction 
+		case "down"  => downward match { 
+					case Nil => -1
+					case h::t => {
+						downward = t
+						h }
+						}
+		case "up"    => upward match {
+					case Nil => -1
+					case h::t => {
+						upward = t
+						h }
+					      }
+					}
 	def peek(dir:String) = dir match {
-		case "down" => downward.head
-		case "up"   => upward.head
+		case "down" => downward match { 
+					case Nil => -1
+					case h::t => h
+					}
+		case "up"   => upward match { 
+					case Nil => -1
+					case h::t => h
+					}
 		}
-
 }
 
 
