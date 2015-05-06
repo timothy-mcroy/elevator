@@ -90,3 +90,43 @@ object guiOutput {
 	}
 
 }
+
+class Priorities() {
+	private var downward = List()
+	private var upward = List()
+	
+	def put(floor:Int, dir:String) = match {
+		case "down" => {floor::downward
+				downward = downward.sortWith(_ > _ ) }
+		case "up"   => {floor::upward
+				upward = upward.sortWith(_ < _) }
+				}
+				
+	/* Removes all copies of a floor from both upward and downward */			
+	def clean ( floor:Int ) = {
+		downward = downward diff List(floor)
+		upward	 = upward diff List(floor)
+		}
+	def pop(dir:String ) = dir match {
+	//Removes the first item from both the upward and downward queues 
+		case "down"  => { 
+					val tmp = downward.head
+					downward = downward.tail
+					this.clean(tmp)
+					tmp
+				}
+		case "up"    => { 
+					val tmp = upward.head
+					upward = upward.tail
+					this.clean(tmp)
+					tmp
+				}
+		}
+	def peek(dir:String) = dir match {
+		case "down" => downward.head
+		case "up"   => upward.head
+		}
+
+}
+
+
