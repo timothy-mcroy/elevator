@@ -1,5 +1,6 @@
-object guiOutput {
 
+object guiOutput {
+	
 	def Floor1Up()
 	{
 		//Place your code here for when the up button is pressed on floor 1.
@@ -92,14 +93,12 @@ object guiOutput {
 }
 
 class Priorities() {
-	private var downward = List()
-	private var upward = List()
+	private var downward = List[Int]()
+	private var upward = List[Int]()
 	
-	def put(floor:Int, dir:String) = match {
-		case "down" => {floor::downward
-				downward = downward.sortWith(_ > _ ) }
-		case "up"   => {floor::upward
-				upward = upward.sortWith(_ < _) }
+	def put(floor:Int, dir:String) = dir match {
+		case "down" => downward = (floor::downward).sortWith(_ > _ ) 
+		case "up"   => upward = (floor::upward).sortWith(_ < _) 
 				}
 				
 	/* Removes all copies of a floor from both upward and downward */			
@@ -134,5 +133,7 @@ class Priorities() {
 					}
 		}
 }
+
+
 
 
