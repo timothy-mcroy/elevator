@@ -197,6 +197,14 @@ class Controller {
 					case "down" => Motor.down
 				}
 			}
+			else if (SystemStatus.floor3DownButtonLit || SystemStatus.elevator3ButtonLit) {
+				changeDoor(2)
+				Motor.up
+				}
+			else if (SystemStatus.floor1UpButtonLit || SystemStatus.elevator2ButtonLit) {
+				changeDoor(2)
+				Motor.down
+				}
 			else direction = "stopped"
 		}
 
