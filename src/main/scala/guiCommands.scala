@@ -1,12 +1,12 @@
 
 object guiOutput {
-	
+
 	def Floor1Up()
 	{
 		//Place your code here for when the up button is pressed on floor 1.
 		println("Floor 1 Up Button Pressed")
 	}
-	
+
 	def Floor2Up()
 	{
 		//Place your code here for when the up button is pressed on floor 2.
@@ -71,19 +71,19 @@ object guiOutput {
 		//Place your code here for when the alarm mode is switched to off.
 		println("Alarm Off")
 	}
-	
+
 	def ArrivedFloor1()
 	{
 		//Place your code here for when the elevator arrived to floor 1.
 		println("Floor 1")
 	}
-	
+
 	def ArrivedFloor2()
 	{
 		//Place your code here for when the elevator arrived to floor 2.
 		println("Floor 2")
 	}
-	
+
 	def ArrivedFloor3()
 	{
 		//Place your code here for when the elevator arrived to floor 3.
@@ -95,21 +95,22 @@ object guiOutput {
 class Priorities() {
 	private var downward = List[Int]()
 	private var upward = List[Int]()
-	
+
 	def put(floor:Int, dir:String) = dir match {
-		case "down" => downward = (floor::downward).sortWith(_ > _ ) 
-		case "up"   => upward = (floor::upward).sortWith(_ < _) 
+		case "down" => downward = (floor::downward).sortWith(_ > _ )
+		case "up"   => upward = (floor::upward).sortWith(_ < _)
 				}
-				
-	/* Removes all copies of a floor from both upward and downward */			
+
+	/* Removes all copies of a floor from both upward and downward */
+	// This should be called whenever the doors are opened.
 	def clean ( floor:Int ) = {
 		downward = downward diff List(floor)
 		upward	 = upward diff List(floor)
 		}
 	def pop(dir:String ) = dir match {
-	//Removes the first item from both the upward and downward queues
-	//Returns -1 if there are no more items in the given direction 
-		case "down"  => downward match { 
+	//Removes the first item from either the upward or downward queues
+	//Returns -1 if there are no more items in the given direction
+		case "down"  => downward match {
 					case Nil => -1
 					case h::t => {
 						downward = t
@@ -123,17 +124,14 @@ class Priorities() {
 					      }
 					}
 	def peek(dir:String) = dir match {
-		case "down" => downward match { 
+		case "down" => downward match {
 					case Nil => -1
 					case h::t => h
 					}
-		case "up"   => upward match { 
+		case "up"   => upward match {
 					case Nil => -1
 					case h::t => h
 					}
 		}
+	def
 }
-
-
-
-
