@@ -66,11 +66,13 @@ object guiOutput {
 	def MaintenanceModeOn()
 	{
 		//Place your code here for when the maintanence mode is switched to on.
+		c.maintenanceOn
 		println("Maintenance Mode On")
 	}
 	def MaintenanceModeOff()
 	{
 		//Place your code here for when the maintanence mode is switched to off.
+		c.maintenanceOff
 		println("Maintenance Mode Off")
 	}
 
@@ -112,7 +114,7 @@ object guiOutput {
 class Controller {
 	var direction = "stopped"
 	var stopFloor = 0
-	val maintenance = false
+	var maintenance = false
 	changeDoor(1)
 	def ArrivedAt(floor:Int) {
 		//logic to handle arrival
@@ -126,8 +128,10 @@ class Controller {
 	def ButtonPress(buttonName:String) {
 		if (maintenance) {
 		 	println("Detected that maintentance button is pressed")
+		 	changeLight(buttonName, false)
+		 	changeLight("floor1", true) //Presumes maintenance is at first floor
 			}
-		println("In ButtonPress, direction is = " + direction)
+		else {
 		direction match {
 			case "stopped" => {
 			//presumes doors are open
@@ -145,7 +149,7 @@ class Controller {
 					Motor.up
 					direction = "up"
 				}
-				else if (List("floor2up","floor2down", "elev2") contains buttonName)
+				else if ( (List("floor2up","floor2down", "elev2") contains buttonName) && (floor !=2))
 				{
 					changeDoor(floor)
 					if (floor==3){
@@ -163,6 +167,7 @@ class Controller {
 
 			}
 			case _ => {	} //Do nothing
+			}
 			}
 		}
 	def arriveFloor1(){
@@ -275,4 +280,12 @@ class Controller {
 			}
 		}
 	def isOnFloor():Boolean = (getFloor() != -1)
+	def maintenanceOn() = {
+		maintenance = true
+		changeLight("floor1", true)
+		}
+	def maintenanceOff()= {
+		maintenance = false
+		changeLight("floor1",false)
+		}
 }
