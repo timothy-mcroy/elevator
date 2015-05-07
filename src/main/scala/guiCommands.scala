@@ -90,3 +90,26 @@ object guiOutput {
 	}
 
 }
+
+class Controller {
+	var direction = "stopped"
+	var stopFloor = 0
+	
+	def ArrivedAt(floor:Int) {
+	//logic to handle arrivale
+	
+	}
+	def ButtonPress(buttonName:String) = {
+	if SystemStatus.maintenance {  }
+	buttonName match = {
+		case "floor1"     =>
+		case "floor2up"   =>
+		case "floor2down" =>
+		case "floor3"	  =>
+		
+		}
+	}
+	def getFloor():Int 
+	
+	
+}
