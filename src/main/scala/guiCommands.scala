@@ -27,6 +27,8 @@ object guiOutput {
 	def elevFloor1()
 	{
 		//Place your code here for when the 1 button is pressed in the elevator.
+		
+		c.buttonPressed
 		println("Elevator Button 1 Pressed")
 	}
 
@@ -90,3 +92,176 @@ object guiOutput {
 	}
 
 }
+
+class Controller {
+	var direction = "stopped"
+	var stopFloor = 0
+	
+	def ArrivedAt(floor:Int) {
+	//logic to handle arrivale
+	
+	floor match = {
+		case 1 => {
+		motor.stop
+		SystemStatus.floor1UpButtonLit  = false
+		SystemStatus.elevator1ButtonLit = false
+		changeDoor(floor)
+		if continue() {
+			changeDoor(floor)
+			motor.up
+			direction = "up"
+			}
+		else direction = "stopped"
+		
+		} 
+		case 2 =>{
+		
+			if (stopAt2){
+				motor.stop
+				direction match = {
+				//TODO Change up and down arrow lights
+					case "up" => floor2UpButton = false
+					case "down" => floor2DownButton = false
+					}
+				SystemStatus.elevator2ButtonLit = false
+				changeDoor(floor)
+				if floor2continue {
+					changeDoor(floor)
+					direction match = {
+						case "up"   => motor.up
+						case "down" => motor.down
+					}
+				else {
+				direction = "stopped"
+				}
+			}
+			}	
+			
+		}
+		case 3 => {
+			motor.stop
+			SystemStatus.floor3UpButtonLit  = false
+			SystemStatus.elevator3ButtonLit = false
+			changeDoor(floor)
+			if continue() {
+				changeDoor(floor)
+				motor.down
+				direction = "down"
+			}
+			else direction = "stopped"
+		
+		}
+		}
+	}
+	def ButtonPress(buttonName:String) = {
+	if SystemStatus.maintenance {  }
+	direction match = {
+		case "stopped" => {
+		//presumes doors are open
+			val floor = getFloor
+			if (("floor1", "elev1") contains buttonName && floor != 1) {
+				changeDoor(floor)
+				motor.down
+				
+				}
+				
+			else if (("floor3", "elev3") contains buttonName && floor != 3) {
+				changeDoor(floor)
+				motor.up
+			}
+			else if (("floor2up", "elev2") contains buttonName)
+			{
+				changeDoor(floor)
+				if (floor==3) motor.down
+				else motor.up
+			
+			}
+			//Invalid button press.  Elevator is at requested floor
+			else changeLight(buttonName)
+				 
+		
+		}
+		case _ => {]		
+		
+		}
+		
+		
+		
+		
+		
+		
+		
+		
+		case _  => 
+	
+	buttonName match = {
+		case "floor1"     =>
+		case "floor2up"   =>
+		case "floor2down" =>
+		case "floor3"	  =>
+		case "elev1"      =>
+		case "elev2"	  =>
+		case "elev3"	  =>
+		
+		}
+	}
+	def getFloor():Int = {
+		motor.lineOut match = {
+			case 36 => 1
+			case 20 => 2
+			case 2  => 3
+			}
+	}
+	def isOnFloor()
+	def changeDoor(floor:Int) {
+		assert isOnFloor()
+		floor match = {
+			case 1 => door1Open = !door1Open
+			case 2 => door2Open = !door2Open
+			case 3 => door3Open = !door3Open
+			}
+	}
+	def continue():Boolean {
+		List(SystemStatus.elevator1ButtonLit,
+		SystemStatus.elevator2ButtonLit,
+		SystemStatus.elevator3ButtonLit,
+		SystemStatus.floor1UpButtonLit,
+		SystemStatus.floor2UpButtonLit,
+		SystemStatus.floor3UpButtonLit,
+		SystemStatus.floor2DownButtonLit) exists (true)
+	}
+	def floor2continue(){
+	direction match = {
+		case "up"   => {
+			(SystemStatus.elevator3ButtonLit ||
+			SystemStatus.floor3UpButtonLit)
+			}
+		case "down" => {
+			(SystemStatus.elevator1ButtonLit ||
+			SystemStatus.floor1UpButtonLit)
+		}
+	
+	}
+	def stopAt2(){
+		SystemStatus.elevator2ButtonLit || 
+			(direction == "up" && floor2UpButton) ||
+			(direction == "down" && floor2DownButton)
+			}
+	def changeLight(buttonName:String,on:Boolean){
+	buttonName match = {
+		case "floor1"     => SystemStatus.floor1UpButtonLit = on
+		case "floor2up"   => SystemStatus.floor2UpButtonLit = on
+		case "floor2down" => SystemStatus.floor2DownButtonLit = on
+		case "floor3"	  => SystemStatus.floor3DownButtonLit = on
+		case "elev1"      => SystemStatus.elevator1ButtonLit  = on
+		case "elev2"	  => SystemStatus.elevator2ButtonLit  = on
+		case "elev3"	  => SystemStatus.elevator3ButtonLit  = on
+		case "upArrow"    => SystemStatus.UpArrowOn = on
+		case "downArrow"  => SystemStatus.DownArrowOn = on
+		}
+	
+	
+	
+}
+
+
