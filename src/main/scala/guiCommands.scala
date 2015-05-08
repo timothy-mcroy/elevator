@@ -133,19 +133,24 @@ else
 		direction match {
 			case "stopped" => {
 			//presumes doors are open
+				
 				val floor = getFloor
 				//println("go to floor 3 " + ( (List("floor3", "elev3") contains buttonName) && (floor != 3) ) )
 				if ( (List("floor1", "elev1") contains buttonName) && (floor != 1) ) {
 					changeDoor(floor)
 					Motor.down
 					direction = "down"
-
+					if(floor == 2) changeLight("floor2down",false)
+					else changeLight("floor3down",false)
+					
 					}
 
 				else if ((List("floor3", "elev3") contains buttonName) && (floor != 3)) {
 					changeDoor(floor)
 					Motor.up
 					direction = "up"
+					if(floor == 2) changeLight("floor2up",false)
+					else changeLight("floor1up",false)
 				}
 				else if ((List("floor2up","floor2down", "elev2") contains buttonName) && (floor !=2))
 				{
@@ -153,10 +158,12 @@ else
 					if (floor==3){
 						Motor.down
 						direction = "down"
+						changeLight("floor3down",false)
 					}
 					else {
 						Motor.up
 						direction = "up"
+						changeLight("floor1up",false)
 						}
 				}
 					//Invalid button press.  Elevator is at requested floor
@@ -197,10 +204,16 @@ else
 			if (floor2continue) {
 				changeDoor(2)
 				direction match {
-					case "up"   => Motor.up
-					case "down" => Motor.down
+					case "up"   =>{
+						Motor.up
+						changeLight("floor2up",false)
+						}
+					case "down" => {
+						Motor.down
+						changeLight("floor2down", false)
+					}
 				}
-			}
+			}/*
 			else if (SystemStatus.floor3DownButtonLit || SystemStatus.elevator3ButtonLit) {
 				changeDoor(2)
 				Motor.up
@@ -208,7 +221,7 @@ else
 			else if (SystemStatus.floor1UpButtonLit || SystemStatus.elevator2ButtonLit) {
 				changeDoor(2)
 				Motor.down
-				}
+				}*/
 			else direction = "stopped"
 		}
 
@@ -287,7 +300,9 @@ else
 	def stopAt2():Boolean = {
 		List(SystemStatus.elevator2ButtonLit,
 			(direction == "up" && SystemStatus.floor2UpButtonLit),
-			(direction == "down" && SystemStatus.floor2DownButtonLit)).foldLeft(false)(_||_)
+			(direction == "down" && SystemStatus.floor2DownButtonLit),
+			(direction == "down" && (SystemStatus.floor2UpButtonLit && !SystemStatus.floor1UpButtonLit)),
+			(direction == "up" && (SystemStatus.floor2DownButtonLit && !SystemStatus.floor3DownButtonLit)  ) ).foldLeft(false)(_||_)
 			}
 	def changeLight(buttonName:String,on:Boolean){
 		buttonName match {
