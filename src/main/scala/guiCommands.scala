@@ -3,7 +3,6 @@ object guiOutput {
 	def Floor1Up()
 	{
 		//Place your code here for when the up button is pressed on floor 1.
-		SystemStatus.floor1UpButtonLit = true
 		c.ButtonPress("floor1")
 		println("Floor 1 Up Button Pressed")
 	}
@@ -11,7 +10,6 @@ object guiOutput {
 	def Floor2Up()
 	{
 		//Place your code here for when the up button is pressed on floor 2.
-		SystemStatus.floor2UpButtonLit = true
 		c.ButtonPress("floor2up")
 		println("Floor 2 Up Button Pressed")
 	}
@@ -19,7 +17,6 @@ object guiOutput {
 	def Floor2Down()
 	{
 		//Place your code here for when the down button is pressed on floor2.
-		SystemStatus.floor2DownButtonLit = true
 		c.ButtonPress("floor2down")
 		println("Floor 2 Down Button Pressed")
 	}
@@ -27,7 +24,6 @@ object guiOutput {
 	def Floor3Down()
 	{
 		//Place your code here for when the down button is pressed on floor3.
-		SystemStatus.floor3DownButtonLit = true
 		c.ButtonPress("floor3")
 		println("Floor 3 Down Button Pressed")
 	}
@@ -35,7 +31,6 @@ object guiOutput {
 	def elevFloor1()
 	{
 		//Place your code here for when the 1 button is pressed in the elevator.
-		SystemStatus.elevator1ButtonLit = true
 		c.ButtonPress("elev1")
 		println("Elevator Button 1 Pressed")
 	}
@@ -43,7 +38,6 @@ object guiOutput {
 	def elevFloor2()
 	{
 		//Place your code here for when the 2 button is pressed in the elevator
-		SystemStatus.elevator2ButtonLit = true
 		c.ButtonPress("elev2")
 		println("Elevator Button 2 Pressed")
 	}
@@ -51,7 +45,6 @@ object guiOutput {
 	def elevFloor3()
 	{
 		//Place your code here for when the 3 button is pressed in the elevator
-		SystemStatus.elevator3ButtonLit = true
 		c.ButtonPress("elev3")
 		println("Elevator Button 3 Pressed")
 	}
@@ -66,12 +59,14 @@ object guiOutput {
 	def MaintenanceModeOn()
 	{
 		//Place your code here for when the maintanence mode is switched to on.
+		c.maintenanceModeOn()
 		println("Maintenance Mode On")
 	}
 	def MaintenanceModeOff()
 	{
 		//Place your code here for when the maintanence mode is switched to off.
 		println("Maintenance Mode Off")
+		c.maintenance = false 	//good candidate for rearranging
 	}
 
 	def AlarmModeOn()
@@ -112,7 +107,8 @@ object guiOutput {
 class Controller {
 	var direction = "stopped"
 	var stopFloor = 0
-	val maintenance = false
+	var maintenance = false
+	var alarm = false
 	changeDoor(1)
 	def ArrivedAt(floor:Int) {
 		//logic to handle arrival
@@ -124,10 +120,15 @@ class Controller {
 			}
 		}
 	def ButtonPress(buttonName:String) {
-		if (maintenance) {
+		if (maintenance || alarm) {
 		 	println("Detected that maintentance button is pressed")
+			
+			
 			}
+else
+{
 		println("In ButtonPress, direction is = " + direction)
+		changeLight(buttonName,true)
 		direction match {
 			case "stopped" => {
 			//presumes doors are open
@@ -165,6 +166,7 @@ class Controller {
 			case _ => {	} //Do nothing
 			}
 		}
+		}
 	def arriveFloor1(){
 		Motor.stop
 		SystemStatus.floor1UpButtonLit  = false
@@ -181,6 +183,7 @@ class Controller {
 	def arriveFloor2(){
 
 		if (stopAt2){
+			println("Stopped at 2") //for debugging
 			Motor.stop
 			println(direction)
 			direction match {
@@ -226,6 +229,15 @@ class Controller {
 		else direction = "stopped"
 
 		}
+
+	def maintenanceModeOn() = {
+		maintenance = true	
+		changeLight("floor1", true)
+	}
+	
+	def maintenanceModeOff() = {
+		maintenance = false
+	}
 
 	def getFloor():Int = {
 		Motor.lineOut match {
