@@ -72,6 +72,7 @@ object guiOutput {
 	def AlarmModeOn()
 	{
 		//Place your code here for when the alarm mode is switched to on.
+		c.alarmModeOn()
 		println("Alarm On")
 	}
 
@@ -146,7 +147,7 @@ else
 					Motor.up
 					direction = "up"
 				}
-				else if (List("floor2up","floor2down", "elev2") contains buttonName)
+				else if ((List("floor2up","floor2down", "elev2") contains buttonName) && (floor !=2))
 				{
 					changeDoor(floor)
 					if (floor==3){
@@ -239,6 +240,13 @@ else
 		maintenance = false
 	}
 
+	def alarmModeOn() = {
+	
+	for(x <- List("floor2up","floor2down","floor1up","floor3","elev1","elev2","elev3")) {changeLight(x, false)}
+	alarm = true
+	
+	}
+
 	def getFloor():Int = {
 		Motor.lineOut match {
 			case 36 => 1
@@ -295,4 +303,7 @@ else
 			}
 		}
 	def isOnFloor():Boolean = (getFloor() != -1)
+
+		
+
 }
