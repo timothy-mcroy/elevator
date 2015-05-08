@@ -1,0 +1,3 @@
+# Ignoring sbt generated files #
+project/
+target/
