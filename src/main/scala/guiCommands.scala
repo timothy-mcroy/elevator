@@ -3,7 +3,6 @@ object guiOutput {
 	def Floor1Up()
 	{
 		//Place your code here for when the up button is pressed on floor 1.
-		SystemStatus.floor1UpButtonLit = true
 		c.ButtonPress("floor1")
 		println("Floor 1 Up Button Pressed")
 	}
@@ -11,7 +10,6 @@ object guiOutput {
 	def Floor2Up()
 	{
 		//Place your code here for when the up button is pressed on floor 2.
-		SystemStatus.floor2UpButtonLit = true
 		c.ButtonPress("floor2up")
 		println("Floor 2 Up Button Pressed")
 	}
@@ -19,7 +17,6 @@ object guiOutput {
 	def Floor2Down()
 	{
 		//Place your code here for when the down button is pressed on floor2.
-		SystemStatus.floor2DownButtonLit = true
 		c.ButtonPress("floor2down")
 		println("Floor 2 Down Button Pressed")
 	}
@@ -27,7 +24,6 @@ object guiOutput {
 	def Floor3Down()
 	{
 		//Place your code here for when the down button is pressed on floor3.
-		SystemStatus.floor3DownButtonLit = true
 		c.ButtonPress("floor3")
 		println("Floor 3 Down Button Pressed")
 	}
@@ -35,7 +31,6 @@ object guiOutput {
 	def elevFloor1()
 	{
 		//Place your code here for when the 1 button is pressed in the elevator.
-		SystemStatus.elevator1ButtonLit = true
 		c.ButtonPress("elev1")
 		println("Elevator Button 1 Pressed")
 	}
@@ -43,7 +38,6 @@ object guiOutput {
 	def elevFloor2()
 	{
 		//Place your code here for when the 2 button is pressed in the elevator
-		SystemStatus.elevator2ButtonLit = true
 		c.ButtonPress("elev2")
 		println("Elevator Button 2 Pressed")
 	}
@@ -51,7 +45,6 @@ object guiOutput {
 	def elevFloor3()
 	{
 		//Place your code here for when the 3 button is pressed in the elevator
-		SystemStatus.elevator3ButtonLit = true
 		c.ButtonPress("elev3")
 		println("Elevator Button 3 Pressed")
 	}
@@ -61,22 +54,26 @@ object guiOutput {
 		//Place your code here for when the stop button is pressed in the elevator
 
 		println("Elevator Stop Button Pressed")
+		c.stopButton()
 	}
 
 	def MaintenanceModeOn()
 	{
 		//Place your code here for when the maintanence mode is switched to on.
+		c.maintenanceModeOn()
 		println("Maintenance Mode On")
 	}
 	def MaintenanceModeOff()
 	{
 		//Place your code here for when the maintanence mode is switched to off.
 		println("Maintenance Mode Off")
+		c.maintenance = false 	//good candidate for rearranging
 	}
 
 	def AlarmModeOn()
 	{
 		//Place your code here for when the alarm mode is switched to on.
+		c.alarmModeOn()
 		println("Alarm On")
 	}
 
@@ -84,6 +81,7 @@ object guiOutput {
 	{
 		//Place your code here for when the alarm mode is switched to off.
 		println("Alarm Off")
+		c.alarmModeOff()
 	}
 
 	def ArrivedFloor1()
@@ -111,8 +109,11 @@ object guiOutput {
 
 class Controller {
 	var direction = "stopped"
+	var resetMode = false
+	var stopVal = false
 	var stopFloor = 0
-	val maintenance = false
+	var maintenance = false
+	var alarm = false
 	changeDoor(1)
 	def ArrivedAt(floor:Int) {
 		//logic to handle arrival
@@ -124,37 +125,49 @@ class Controller {
 			}
 		}
 	def ButtonPress(buttonName:String) {
-		if (maintenance) {
+		if (maintenance || alarm) {
 		 	println("Detected that maintentance button is pressed")
+			
+			
 			}
+else
+{
 		println("In ButtonPress, direction is = " + direction)
+		changeLight(buttonName,true)
 		direction match {
 			case "stopped" => {
 			//presumes doors are open
+				
 				val floor = getFloor
 				//println("go to floor 3 " + ( (List("floor3", "elev3") contains buttonName) && (floor != 3) ) )
 				if ( (List("floor1", "elev1") contains buttonName) && (floor != 1) ) {
 					changeDoor(floor)
 					Motor.down
 					direction = "down"
-
+					if(floor == 2) changeLight("floor2down",false)
+					else changeLight("floor3down",false)
+					
 					}
 
 				else if ((List("floor3", "elev3") contains buttonName) && (floor != 3)) {
 					changeDoor(floor)
 					Motor.up
 					direction = "up"
+					if(floor == 2) changeLight("floor2up",false)
+					else changeLight("floor1",false)
 				}
-				else if (List("floor2up","floor2down", "elev2") contains buttonName)
+				else if ((List("floor2up","floor2down", "elev2") contains buttonName) && (floor !=2))
 				{
 					changeDoor(floor)
 					if (floor==3){
 						Motor.down
 						direction = "down"
+						changeLight("floor3down",false)
 					}
 					else {
 						Motor.up
 						direction = "up"
+						changeLight("floor1",false)
 						}
 				}
 					//Invalid button press.  Elevator is at requested floor
@@ -165,7 +178,9 @@ class Controller {
 			case _ => {	} //Do nothing
 			}
 		}
+		}
 	def arriveFloor1(){
+		if (resetMode) alarm = false
 		Motor.stop
 		SystemStatus.floor1UpButtonLit  = false
 		SystemStatus.elevator1ButtonLit = false
@@ -181,6 +196,7 @@ class Controller {
 	def arriveFloor2(){
 
 		if (stopAt2){
+			println("Stopped at 2") //for debugging
 			Motor.stop
 			println(direction)
 			direction match {
@@ -193,10 +209,24 @@ class Controller {
 			if (floor2continue) {
 				changeDoor(2)
 				direction match {
-					case "up"   => Motor.up
-					case "down" => Motor.down
+					case "up"   =>{
+						Motor.up
+						changeLight("floor2up",false)
+						}
+					case "down" => {
+						Motor.down
+						changeLight("floor2down", false)
+					}
 				}
-			}
+			}/*
+			else if (SystemStatus.floor3DownButtonLit || SystemStatus.elevator3ButtonLit) {
+				changeDoor(2)
+				Motor.up
+				}
+			else if (SystemStatus.floor1UpButtonLit || SystemStatus.elevator2ButtonLit) {
+				changeDoor(2)
+				Motor.down
+				}*/
 			else direction = "stopped"
 		}
 
@@ -219,6 +249,31 @@ class Controller {
 
 		}
 
+	def maintenanceModeOn() = {
+		maintenance = true	
+		changeLight("floor1", true)
+	}
+	
+	def maintenanceModeOff() = {
+		maintenance = false
+	}
+
+	def alarmModeOn() = {
+	Motor.stop	
+	for(x <- List("floor2up","floor2down","floor1","floor3","elev1","elev2","elev3")) {changeLight(x, false)}
+	changeLight(closestFloor(),true)			
+	alarm = true
+	alarmDirection()
+		
+	}
+
+	def alarmModeOff() = {
+	resetMode = true
+	changeDoor(getFloor)
+	Motor.down
+	}
+
+
 	def getFloor():Int = {
 		Motor.lineOut match {
 			case 36 => 1
@@ -234,6 +289,7 @@ class Controller {
 			case 1 =>  SystemStatus.door1Open = ! SystemStatus.door1Open
 			case 2 =>  SystemStatus.door2Open = ! SystemStatus.door2Open
 			case 3 =>  SystemStatus.door3Open = ! SystemStatus.door3Open
+			case -1=> { }
 			}
 		}
 	def continue():Boolean = {
@@ -259,7 +315,9 @@ class Controller {
 	def stopAt2():Boolean = {
 		List(SystemStatus.elevator2ButtonLit,
 			(direction == "up" && SystemStatus.floor2UpButtonLit),
-			(direction == "down" && SystemStatus.floor2DownButtonLit)).foldLeft(false)(_||_)
+			(direction == "down" && SystemStatus.floor2DownButtonLit),
+			(direction == "down" && (SystemStatus.floor2UpButtonLit && !SystemStatus.floor1UpButtonLit)),
+			(direction == "up" && (SystemStatus.floor2DownButtonLit && !SystemStatus.floor3DownButtonLit)  ) ).foldLeft(false)(_||_)
 			}
 	def changeLight(buttonName:String,on:Boolean){
 		buttonName match {
@@ -275,4 +333,38 @@ class Controller {
 			}
 		}
 	def isOnFloor():Boolean = (getFloor() != -1)
+	
+	def closestFloor():String = {
+		val line = Motor.lineOut()
+		if ( line <= 10) "elev3"
+		else if (line <= 27) "elev2"
+		else "elev1"
+	}
+
+	def stopButton() = {
+		if (stopVal){
+		 direction match {
+			case "up"      => Motor.up
+			case "down"    => Motor.down
+			case "stopped" => Motor.stop
+			}
+		stopVal = false
+		}
+		else{
+		Motor.stop
+		stopVal = true
+		}
+		}	
+	def alarmDirection() = {
+		val closest = closestFloor()
+		val current = Motor.lineOut
+		if (getFloor != -1){println("onFloors, alarm conditional branch"); Motor.stop; direction = "stopped"}
+		else{
+		closest match {
+			case "elev1" => Motor.down
+			case "elev2" => if (( 10 < current) && (current < 20)) Motor.down else Motor.up
+			case "elev3" => Motor.up 
+		}
+}	}		
+
 }
