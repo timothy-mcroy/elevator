@@ -67,7 +67,7 @@ object guiOutput {
 	{
 		//Place your code here for when the maintanence mode is switched to off.
 		println("Maintenance Mode Off")
-		c.maintenance = false 	//good candidate for rearranging
+		c.maintenanceModeOff()  
 	}
 
 	def AlarmModeOn()
