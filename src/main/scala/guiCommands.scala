@@ -108,6 +108,12 @@ object guiOutput {
 }
 
 object elevatorStatus {
+	/*
+	* This object answers questions about the state of the elevator.
+	*  It is also intended to interact with SystemStatus heavily,
+	*   so that the controller may worry primarily with
+	*   behavior.
+	*/
 	var direction = "stopped"
 	var resetMode = false
 	var maintenance = false
@@ -224,8 +230,6 @@ object elevatorStatus {
 
 class Controller {
 
-
-
 	changeDoor("open")
 	def ArrivedAt(floor:Int) {
 		//logic to handle arrival
@@ -267,8 +271,8 @@ class Controller {
 
 	def arriveFloor1(){
 	    Motor.stop
-	    SystemStatus.floor1UpButtonLit  = false
-			SystemStatus.elevator1ButtonLit = false
+			changeLight("floor1", false)
+			changeLight("elev1", false)
 			changeDoor("open")
 			if (elevatorStatus.resetMode) {
 			     elevatorStatus.alarmComplete
@@ -294,10 +298,9 @@ class Controller {
 			changeLight("elev2", false)
 			changeDoor("open")
 			if (floor2continue) {
-				changeDoor("close")
 				direction match {
-					case "up"   =>Motor.up
-					case "down" =>Motor.down
+					case "up"   =>elevatorMove("up")
+					case "down" =>elevatorMove("down")
 				}
 			}
 			else if (elevatorStatus.maintenance) {
@@ -305,18 +308,16 @@ class Controller {
 			}
 			else elevatorStatus.changeDir("stopped")
 		}
-		else if (SystemStatus.elevator1ButtonLit || SystemStatus.elevator3ButtonLit) {
+		else if (elevatorStatus.lightOn("elev1") || elevatorStatus.lightOn("elev3")) {
 		     //This means that there is a valid request in the opposite direction
-		     changeDoor("close")
+
 		     direction match {
 		           case "up"   => {
-		                elevatorStatus.changeDir("down")
-		                Motor.down
+		                elevatorMove("down")
 		                changeLight("floor2down",false)
 		                }
 		           case "down" => {
-		                elevatorStatus.changeDir("up")
-		                Motor.up
+		                elevatorMove("up")
 		                changeLight("floor2up",false)
 		           }
 		     }
