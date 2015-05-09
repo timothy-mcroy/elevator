@@ -190,11 +190,23 @@ object elevatorStatus {
 				SystemStatus.floor3DownButtonLit,
 				SystemStatus.floor2DownButtonLit).foldLeft(false)(_||_)
 		}
-        def changeDir(dir:String) = dir match {
-            case "up" => direction = "up"
-            case "down" => direction = "down"
-            case "stopped" => direction = "stopped"
-        }
+  def changeDir(dir:String) {
+
+			SystemStatus.UpArrowOn = false
+			SystemStatus.DownArrowOn = false
+
+		dir match {
+      case "up" => direction = "up"
+      case "down" => direction = "down"
+      case "stopped" => direction = "stopped"
+  }
+	direction match {
+		case "up" => SystemStatus.UpArrowOn = true
+		case "down" => SystemStatus.DownArrowOn = true
+		case "stopped" => 
+	}
+
+}
   def alarmActive() = alarm || resetMode
 	def floor2continue():Boolean = direction match {
 		case "up"   => {
@@ -264,7 +276,7 @@ class Controller {
 				//Invalid button press.  Elevator is at requested floor
 				else changeLight(buttonName, false)
 			}
-			case _ => {"Doing nothing"} //Do nothing
+			case _ => { } //Do nothing
 			}
 		}
 		}
