@@ -67,7 +67,7 @@ object guiOutput {
 	{
 		//Place your code here for when the maintanence mode is switched to off.
 		println("Maintenance Mode Off")
-		c.maintenanceModeOff()  
+		c.maintenanceModeOff()
 	}
 
 	def AlarmModeOn()
@@ -113,11 +113,12 @@ object elevatorStatus {
 	var stopVal = false
 	var maintenance = false
 	var alarm = false
-	def changeDoor(floor:Int) {
+	def changeDoor(floor:Int,state:String) {
+		val open = state == "open"
 		floor match {
-			case 1 =>  SystemStatus.door1Open = ! SystemStatus.door1Open
-			case 2 =>  SystemStatus.door2Open = ! SystemStatus.door2Open
-			case 3 =>  SystemStatus.door3Open = ! SystemStatus.door3Open
+			case 1 =>  SystemStatus.door1Open = open
+			case 2 =>  SystemStatus.door2Open = open
+			case 3 =>  SystemStatus.door3Open = open
 			}
 	}
 	def getFloor():Int = {
@@ -129,22 +130,23 @@ object elevatorStatus {
 			}
 		}
 	def maintenanceModeOn() = {
-		maintenance = true	
+		maintenance = true
 		changeLight("floor1", true)
+		if (getFloor > 1) direction = "down"
 	}
 	def maintenanceModeOff() = {
 	maintenance = false
-	}		
+	}
 	def alarmModeOn() = {
-	
+
 			for(x <- List("floor2up","floor2down","floor1","floor3","elev1","elev2","elev3")) {changeLight(x, false)}
 			alarm = true
 			changeLight(closestFloor(),true)
 		}
 	def alarmModeOff() = {
 		resetMode = true
-		
-		changeDoor(getFloor)
+
+		changeDoor(getFloor, "closed")
 		//Motor.down
 		//elevatorStatus.changeDir("down")
 	}
@@ -185,7 +187,7 @@ object elevatorStatus {
             case "down" => direction = "down"
             case "stopped" => direction = "stopped"
         }
-        def alarmActive() = alarm || resetMode		
+        def alarmActive() = alarm || resetMode
         def stopResume() = stopVal = true
 }
 
@@ -195,7 +197,7 @@ class Controller {
 	//def stopVal = elevatorStatus.stopVal
 	var maintenance = false
 	def alarm() = elevatorStatus.alarm
-	elevatorStatus.changeDoor(1)
+	elevatorStatus.changeDoor(getFloor, "open")
 	def continue() = elevatorStatus.continue()
 	def changeLight(light:String,on:Boolean) = elevatorStatus.changeLight(light,on)
 	def ArrivedAt(floor:Int) {
@@ -208,193 +210,184 @@ class Controller {
 			}
 		}
 	def ButtonPress(buttonName:String) {
-		if (maintenance || elevatorStatus.alarmActive) {
+		if (elevatorStatus.maintenance || elevatorStatus.alarmActive) {
 		 	println("Detected that maintentance/alarm button is pressed")
-			
-			
 			}
-else
-{
-		//println("In ButtonPress, direction is = " + direction)
-		changeLight(buttonName,true)
-		direction match {
+		else {
+			changeLight(buttonName,true)
+			direction match {
 			case "stopped" => {
-			//presumes doors are open
-				
 				val floor = getFloor
-				//println("go to floor 3 " + ( (List("floor3", "elev3") contains buttonName) && (floor != 3) ) )
 				if ( (List("floor1", "elev1") contains buttonName) && (floor != 1) ) {
-					elevatorStatus.changeDoor(floor)
-					Motor.down
-					elevatorStatus.changeDir("down")
-					if(floor == 2) changeLight("floor2down",false)
-					else changeLight("floor3",false)
-					
+					floor1Call
 					}
 
 				else if ((List("floor3", "elev3") contains buttonName) && (floor != 3)) {
-					elevatorStatus.changeDoor(floor)
-					Motor.up
-					elevatorStatus.changeDir("up")
-					if(floor == 2) changeLight("floor2up",false)
-					else changeLight("floor1",false)
+					floor3Call
 				}
+
 				else if ((List("floor2up","floor2down", "elev2") contains buttonName) && (floor !=2))
 				{
-					elevatorStatus.changeDoor(floor)
-					if (floor==3){
-						Motor.down
-						elevatorStatus.changeDir("down")
-						changeLight("floor3",false)
-					}
-					else {
-						Motor.up
-						elevatorStatus.changeDir("up")
-						changeLight("floor1",false)
-						}
+					floor2Call
 				}
-					//Invalid button press.  Elevator is at requested floor
-					else changeLight(buttonName, false)
-
-
+				//Invalid button press.  Elevator is at requested floor
+				else changeLight(buttonName, false)
 			}
 			case _ => {	} //Do nothing
 			}
 		}
 		}
-	def arriveFloor1(){
-	        Motor.stop
-	        SystemStatus.floor1UpButtonLit  = false
-		SystemStatus.elevator1ButtonLit = false
-		elevatorStatus.changeDoor(1)
-		if (elevatorStatus.resetMode) {
-		     elevatorStatus.alarmComplete
-		     }
-		else {
-		
-		
-		
-		if (continue()) {
-			elevatorStatus.changeDoor(1) 
-			Motor.up
-			elevatorStatus.changeDir("up")
-			}
-		else elevatorStatus.changeDir("stopped")
+	def floor1Call() {
+		elevatorMove("down")
+		if(getFloor == 2) changeLight("floor2down",false)
+		else changeLight("floor3",false)
 		}
-             }
+	def floor2Call() {
+		if (getFloor==3){
+			elevatorMove("down")
+			changeLight("floor3",false)
+			}
+		else {
+			elevatorMove("up")
+			changeLight("floor1",false)
+			}
+		}
+	def floor3Call() {
+		elevatorMove("up")
+		if(getFloor == 2) changeLight("floor2up",false)
+		else changeLight("floor1",false)
+		}
+	def arriveFloor1(){
+	    Motor.stop
+	    SystemStatus.floor1UpButtonLit  = false
+			SystemStatus.elevator1ButtonLit = false
+			elevatorStatus.changeDoor(getFloor, "open")
+			if (elevatorStatus.resetMode) {
+			     elevatorStatus.alarmComplete
+			     }
+			else {
+				if (continue()) {
+					elevatorMove("up")
+				}
+				else elevatorStatus.changeDir("stopped")
+			}
+    }
 	def arriveFloor2(){
 
 		if (stopAt2){
 			println("Stopped at 2") //for debugging
 			Motor.stop
-			println(direction)
 			direction match {
 			//TODO Change up and down arrow lights
 				case "up" => changeLight("floor2up",false)
 				case "down" => changeLight("floor2down",false)
 				}
 			changeLight("elev2", false)
-			elevatorStatus.changeDoor(2)
+			elevatorStatus.changeDoor(getFloor, "open")
 			if (floor2continue) {
-				elevatorStatus.changeDoor(2)
+				elevatorStatus.changeDoor(getFloor, "close")
 				direction match {
-					case "up"   =>{
-					Motor.up
-					//changeLight("floor2up",false)
-						}
-					case "down" => {
-					Motor.down
-					//changeLight("floor2down",false)
-					}			
+					case "up"   =>Motor.up
+					case "down" =>Motor.down
 				}
 			}
-			else if (SystemStatus.elevator1ButtonLit || SystemStatus.elevator3ButtonLit) {
-			     //This means that there is a valid request in the opposite direction
-			     elevatorStatus.changeDoor(2)
-			     println("this is where it's breaking")
-			     
-			     direction match {
-			           case "up"   => {
-			                elevatorStatus.changeDir("down")
-			                Motor.down
-			                changeLight("floor2down",false)
-			                
-			           
-			                }
-			           case "down" => {
-			                elevatorStatus.changeDir("up")
-			                Motor.up
-			                changeLight("floor2up",false)			           
-			           }
-			     }
-			     }
-			else elevatorStatus.changeDir("stopped")
+			else if (elevatorStatus.maintenance){
+				floor1Call
+			}
+			}
+		else if (SystemStatus.elevator1ButtonLit || SystemStatus.elevator3ButtonLit) {
+		     //This means that there is a valid request in the opposite direction
+		     elevatorStatus.changeDoor(getFloor, "close")
+		     println("this is where it's breaking")
+
+		     direction match {
+		           case "up"   => {
+		                elevatorStatus.changeDir("down")
+		                Motor.down
+		                changeLight("floor2down",false)
+
+
+		                }
+		           case "down" => {
+		                elevatorStatus.changeDir("up")
+		                Motor.up
+		                changeLight("floor2up",false)
+		           }
+		     }
+		     }
+		else elevatorStatus.changeDir("stopped")
 		}
 
 
-		}
-        
+		
+
 	def arriveFloor3(){
-		Motor.stop
-		SystemStatus.floor3DownButtonLit  = false
-		SystemStatus.elevator3ButtonLit = false
-		elevatorStatus.changeDoor(3)
-		println(continue())
+		elevatorStatus.changeLight("floor3", false)
+		elevatorStatus.changeLight("elev3", false)
 		if (continue()) {
 			println("Going down!")
-			elevatorStatus.changeDoor(3)
-			Motor.down
-			elevatorStatus.changeDir("down")
+			elevatorStatus.changeDoor(getFloor, "close")
+			elevatorMove("down")
 		}
-		else elevatorStatus.changeDir("stopped")
-
+		else {
+			Motor.stop
+			elevatorStatus.changeDir("stopped")
+			elevatorStatus.changeDoor(getFloor, "open")
 		}
+	}
 
+	def elevatorMove(dir:String) ={
+		val floor = getFloor
+		if (floor != -1) {
+		dir match {
+			case "stopped" =>
+			case "up"			 => {
+				if (floor != 3) {
+					changeDoor(floor, "close")
+					Motor.up
+					elevatorStatus.changeDir(dir)
+				}
+				else println ("Can't go up on floor 3")
+			}
+			case "down" =>{
+				if (floor != 1) {
+					changeDoor(floor, "close")
+					Motor.down
+					elevatorStatus.changeDir(dir)
+				}
+				else println("Can't go down on floor 1")
+			}
+			}
+		}
+		else println("Elevator is in motion. Can't set fresh direction.")
+	}
 	def maintenanceModeOn() = {
-		maintenance = true	
-		changeLight("floor1", true)
+		elevatorStatus.maintenanceModeOn
+		if (getFloor >1 && direction == "stopped") elevatorMove("down")
 	}
-	
-	def maintenanceModeOff() = {
-		maintenance = false
-	}
+	def maintenanceModeOff() = elevatorStatus.maintenanceModeOff
 
 	def alarmModeOn() = {
-	Motor.stop	
+	Motor.stop
 	elevatorStatus.alarmModeOn
 	alarmDirection()
-		
+
 	}
 
-	def alarmModeOff() = { 
+	def alarmModeOff() = {
 	elevatorStatus.alarmModeOff
 	if (getFloor != 1) Motor.down
 	else {  //if we're turning off the alarm and it's already on floor 1, turn off the alarm immediately
 	        elevatorStatus.alarmComplete
-	        elevatorStatus.changeDoor(1)
+	        elevatorStatus.changeDoor(getFloor, "open")
 	        changeLight("elev1",false)
 	        }
 	}
 
 
-	def getFloor():Int = {
-		Motor.lineOut match {
-			case 36 => 1
-			case 20 => 2
-			case 2  => 3
-			case _  => -1  //not on a floor
-			}
-		}
+	def getFloor():Int = elevatorStatus.getFloor
 	//def isOnFloor()
-	def changeDoor(floor:Int) {
-		assert (isOnFloor(), "You can't open the door!")
-		floor match {
-			case 1 =>  SystemStatus.door1Open = ! SystemStatus.door1Open
-			case 2 =>  SystemStatus.door2Open = ! SystemStatus.door2Open
-			case 3 =>  SystemStatus.door3Open = ! SystemStatus.door3Open
-			case -1=> { }
-			}
-		}
+	def changeDoor(floor:Int,state:String) = elevatorStatus.changeDoor(floor,state)
 	/*def continue():Boolean = {
 		List(SystemStatus.elevator1ButtonLit,
 				SystemStatus.elevator2ButtonLit,
@@ -436,7 +429,7 @@ else
 			}
 		}*/
 	def isOnFloor():Boolean = (getFloor() != -1)
-	
+
 	def closestFloor():String = {
 		val line = Motor.lineOut()
 		if ( line <= 10) "elev3"
@@ -454,14 +447,14 @@ else
 		elevatorStatus.stopVal = false
 		}
 		else{
-		Motor.stop
-		elevatorStatus.stopVal = true
+			Motor.stop
+			elevatorStatus.stopVal = true
 		}
-		}	
+		}
 	def alarmDirection() = {
 		val closest = closestFloor()
 		val current = Motor.lineOut
-		if (elevatorStatus.getFloor != -1){
+		if (getFloor != -1){
 		println("onFloors, alarm conditional branch")
 		Motor.stop
 		elevatorStatus.changeDir("stopped")
@@ -470,9 +463,9 @@ else
 		closest match {
 			case "elev1" => Motor.down
 			case "elev2" => if (( 10 < current) && (current < 20)) Motor.down else Motor.up
-			case "elev3" => Motor.up 
-		}	
-       }		
+			case "elev3" => Motor.up
+		}
+       }
 
 }
 }
