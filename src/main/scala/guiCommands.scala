@@ -200,15 +200,25 @@ object elevatorStatus {
 			SystemStatus.floor1UpButtonLit)
 			}
 		}
-	def stopAt2():Boolean = {
-		List(SystemStatus.elevator2ButtonLit,
-			(direction == "up" && SystemStatus.floor2UpButtonLit),
-			(direction == "down" && SystemStatus.floor2DownButtonLit),
-			(direction == "down" &&
-				(SystemStatus.floor2UpButtonLit && !SystemStatus.floor1UpButtonLit)),
-			(direction == "up" &&
-				(SystemStatus.floor2DownButtonLit && !SystemStatus.floor3DownButtonLit))
-					).foldLeft(false)(_||_)
+		def stopAt2():Boolean = {
+			List(SystemStatus.elevator2ButtonLit,
+				(direction == "up" && SystemStatus.floor2UpButtonLit),
+				(direction == "down" && SystemStatus.floor2DownButtonLit),
+				(direction == "down" && (SystemStatus.floor2UpButtonLit && !(SystemStatus.floor1UpButtonLit || lightOn("elev1")))),
+				(direction == "up" && (SystemStatus.floor2DownButtonLit && !(SystemStatus.floor3DownButtonLit|| lightOn("elev3") ))  ) ).foldLeft(false)(_||_)
+				}
+		def lightOn(buttonName:String)= buttonName match{
+				case "floor1"     => SystemStatus.floor1UpButtonLit
+				case "floor2up"   => SystemStatus.floor2UpButtonLit
+				case "floor2down" => SystemStatus.floor2DownButtonLit
+				case "floor3"	  => SystemStatus.floor3DownButtonLit
+				case "elev1"      => SystemStatus.elevator1ButtonLit
+				case "elev2"	  => SystemStatus.elevator2ButtonLit
+				case "elev3"	  => SystemStatus.elevator3ButtonLit
+				case "upArrow"    => SystemStatus.UpArrowOn
+				case "downArrow"  => SystemStatus.DownArrowOn
+				case "stop"			  => SystemStatus.elevatorStopButtonLit
+
 			}
 }
 
@@ -250,7 +260,7 @@ class Controller {
 				//Invalid button press.  Elevator is at requested floor
 				else changeLight(buttonName, false)
 			}
-			case _ => {	} //Do nothing
+			case _ => {"Doing nothing"} //Do nothing
 			}
 		}
 		}
@@ -269,6 +279,7 @@ class Controller {
 				}
 				else elevatorStatus.changeDir("stopped")
 			}
+
     }
 	def arriveFloor2(){
 
@@ -289,8 +300,11 @@ class Controller {
 					case "down" =>Motor.down
 				}
 			}
-			else if (elevatorStatus.maintenance) floor1Call
-			
+			else if (elevatorStatus.maintenance) {
+				floor1Call
+			}
+			else elevatorStatus.changeDir("stopped")
+		}
 		else if (SystemStatus.elevator1ButtonLit || SystemStatus.elevator3ButtonLit) {
 		     //This means that there is a valid request in the opposite direction
 		     changeDoor("close")
@@ -306,7 +320,7 @@ class Controller {
 		                changeLight("floor2up",false)
 		           }
 		     }
-		     }}
+		     }
 		else elevatorStatus.changeDir("stopped")
 		}
 
