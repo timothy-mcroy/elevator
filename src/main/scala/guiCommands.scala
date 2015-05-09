@@ -290,7 +290,7 @@ class Controller {
 				}
 			}
 			else if (elevatorStatus.maintenance) floor1Call
-			}
+			
 		else if (SystemStatus.elevator1ButtonLit || SystemStatus.elevator3ButtonLit) {
 		     //This means that there is a valid request in the opposite direction
 		     changeDoor("close")
@@ -306,7 +306,7 @@ class Controller {
 		                changeLight("floor2up",false)
 		           }
 		     }
-		     }
+		     }}
 		else elevatorStatus.changeDir("stopped")
 		}
 
